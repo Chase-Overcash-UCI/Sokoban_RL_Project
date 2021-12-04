@@ -1,20 +1,28 @@
 import numpy as np
 import rl_util as rlult
-import Sokoban
+from Sokoban import Sokoban
 
 MAX_DEPTH = 10
 MAX_EPISODE = 1000
 
-def MCTS_step(board, boxes, tars):
-    sokoban = Sokoban(board) # not implemented yet
-    b = np.copy(board)
-
+def MCTS_step(board):
+    sokoban = Sokoban(board)
+    valid_acts = sokoban.valid_moves
     agent = dict()
+    for a in valid_acts:
+        agent[a] = 0
+    
     for episode in range(MAX_EPISODE):
-        update_agent(b,agent)
+        update_agent(sokoban,agent)
 
-def update_agent(board, agent):
-    a = random_action(get_valid_actions(board))
+    action = pick_best_action(agent)
+    return action
+
+
+def update_agent(env, agent):
+    for step in range(MAX_DEPTH):
+        a = random_action(env.valid_moves)
+        env.move(a)
 
 def random_action(valid_actions):
     return np.random.choice(valid_actions) 
