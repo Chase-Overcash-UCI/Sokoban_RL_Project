@@ -101,3 +101,32 @@ class Sokoban:
     # set cell to CellState
     def set_cell_at(self, pos, state):
         self.board[pos[0], pos[1]] = state
+
+    # Functions added by Huilai
+    # Please let me know if I wrongly use any attribute
+    
+    # get goal cells
+    def _update_goals(self):
+        # update goal_cells based on self.board
+        self.goal_cells = [(i,j) 
+        for i in self.n_row 
+            for j in self.n_col 
+                if self.board[i,j]==CellState.GOAL or self.board[i,j]==CellState.BOX_ON_GOAL]
+
+    def _update_boxes(self):
+        # update box_cells based on self.board
+        self.box_cells = [(i,j) 
+        for i in self.n_row
+            for j in self.n_col
+                if self.board[i,j]==CellState.BOX or self.board[i,j]==CellState.BOX_ON_GOAL] 
+
+    # set self.board to a given board
+    def set_board_to(self, board):
+        self.board = board
+        self.n_row, self.n_col = self.board.shape[0], self.board.shape[1]
+
+        self._update_boxes()
+        self._update_goals()
+        self.valid_moves = self.get_current_valid_moves()
+
+
