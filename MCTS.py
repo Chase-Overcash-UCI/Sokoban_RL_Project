@@ -7,7 +7,7 @@ MAX_EPISODE = 10000
 
 def MCTS_step(board):
     
-    sokoban = Sokoban('XD', 1, np.copy(board))
+    sokoban = Sokoban('XD', True, 1, np.copy(board))
 
     valid_acts = sokoban.valid_moves
     agent = dict()
@@ -22,7 +22,7 @@ def MCTS_step(board):
     for episode in range(MAX_EPISODE):
         first_a, r = MCTS_episode(sokoban)
         agent[first_a] += r
-        sokoban = Sokoban('XD', 1, np.copy(board))
+        sokoban = Sokoban('XD', True, 1, np.copy(board))
     
     for a in agent.keys():
         if action_counter[a] == 0:
