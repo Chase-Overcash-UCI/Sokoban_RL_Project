@@ -4,13 +4,15 @@ from util import convert_text_to_board, print_board, get_new_pos, Action, CellSt
 class Sokoban:
     # board is a numpy 2D array, all other are list of tuples
     # This way it's easier to index board
-    def __init__(self, input_path):
-        self.board, self.box_cells, self.goal_cells, self.player_pos = convert_text_to_board(input_path)
-        self.n_row, self.n_col = self.board.shape[0], self.board.shape[1]
-        self.valid_moves = self.get_current_valid_moves()
-
-    def __init__(self,board):
-        self.set_board_to(board)
+    def __init__(self, input_path, mode = 0, board = None):
+        if mode == 0:
+            self.board, self.box_cells, self.goal_cells, self.player_pos = convert_text_to_board(input_path)
+            self.n_row, self.n_col = self.board.shape[0], self.board.shape[1]
+            self.valid_moves = self.get_current_valid_moves()
+        
+        elif mode == 1:
+            self.set_board_to(board)
+ 
 
     # If move is not legal we can just skip the whole method
     def move(self, action, debug=True):
@@ -112,22 +114,22 @@ class Sokoban:
     def _update_goals(self):
         # update goal_cells based on self.board
         self.goal_cells = [(i,j) 
-        for i in self.n_row 
-            for j in self.n_col 
+        for i in range(self.n_row) 
+            for j in range(self.n_col) 
                 if self.board[i,j] == CellState.GOAL or self.board[i,j] == CellState.BOX_ON_GOAL]
     
     # update box cells
     def _update_boxes(self):
         # update box_cells based on self.board
         self.box_cells = [(i,j) 
-        for i in self.n_row
-            for j in self.n_col
+        for i in range(self.n_row)
+            for j in range(self.n_col)
                 if self.board[i,j] == CellState.BOX or self.board[i,j] == CellState.BOX_ON_GOAL] 
     
     # update player pos
     def _update_player_pos(self):
-        for i in self.n_row:
-            for j in self.n_col:
+        for i in range(self.n_row):
+            for j in range(self.n_col):
                 if self.board[i,j] == CellState.PLAYER or self.board[i,j] == CellState.PLAYER_ON_GOAL:
                     self.player_pos = (i,j)
 
@@ -136,12 +138,14 @@ class Sokoban:
         self.goal_cells = list()
         self.box_cells = list()
         
-        for i in self.n_row:
-            for j in self.n_col:
+        for i in range(self.n_row):
+            for j in range(self.n_col):
                 if self.board[i,j] == CellState.GOAL or self.board[i,j] == CellState.BOX_ON_GOAL:
                     self.goal_cells.append((i,j))
                 elif self.board[i,j] == CellState.BOX or self.board[i,j] == CellState.BOX_ON_GOAL:
                     self.box_cells.append((i,j))
+                    if self.board[i,j] == CellState.BOX_ON_GOAL:
+                        self.num_on_goal += 1
                 elif self.board[i,j] == CellState.PLAYER or self.board[i,j] == CellState.PLAYER_ON_GOAL:
                     self.player_pos = (i,j)
         
@@ -151,6 +155,8 @@ class Sokoban:
     # set self.board to a given board
     def set_board_to(self, board):
         self.board = board
+        self.num_on_goal = 0
+        
         self.n_row, self.n_col = self.board.shape[0], self.board.shape[1]
 
         self._update_all()
