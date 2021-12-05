@@ -1,9 +1,11 @@
+import sys
+
 from SokobanGame import SokobanGame, SokobanPygame, SokobanTerminal
 from Sokoban import Sokoban
 import time
 import pygame
 import random
-
+from State import State
 input_file = "sample_inputs/sokoban01.txt"
 
 if __name__ == "__main__":
@@ -16,6 +18,11 @@ if __name__ == "__main__":
     # sokoban_game.play()
 
     # Or if you want to apply MC/DFS/BFS/etc.:
+    sokoban_base = Sokoban(input_file)
+    x, y = sokoban_base.player_pos
+    root = State(x, y, None, None)
+    root.BFS(sokoban_base, root)
+    sys.exit("BFS")
     # Using this will simulate the game on screen
     # q to quit, w to speed up, s to slow down (or comment out the sleep for unlimited speed)
     sokoban_game = SokobanPygame(input_file)
