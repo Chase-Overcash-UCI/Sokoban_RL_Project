@@ -1,21 +1,23 @@
 from util import convert_text_to_board, print_board, get_new_pos, Action, CellState
+from typing import List
 
 
 class Sokoban:
     # board is a numpy 2D array, all other are list of tuples
     # This way it's easier to index board
-    def __init__(self, input_path, mode = 0, board = None):
+
+    def __init__(self, input_path, debug=True, mode = 0, board = None):
         if mode == 0:
             self.board, self.box_cells, self.goal_cells, self.player_pos = convert_text_to_board(input_path)
             self.n_row, self.n_col = self.board.shape[0], self.board.shape[1]
             self.valid_moves = self.get_current_valid_moves()
+            self.debug = debug
         
         elif mode == 1:
             self.set_board_to(board)
- 
 
     # If move is not legal we can just skip the whole method
-    def move(self, action, debug=True):
+    def move(self, action):
         if action not in self.valid_moves:
             return
 
@@ -40,7 +42,7 @@ class Sokoban:
 
         # update player pos
         self.player_pos = player_next_pos
-        if debug:
+        if self.debug:
             print_board(self.board)
 
         # update valid move
@@ -98,6 +100,28 @@ class Sokoban:
             if box_pos not in self.goal_cells:
                 return False
         return True
+
+    def set_box_and_player_pos(self, new_box_pos: List[tuple], new_player_pos: tuple):
+        # These shouldn't happen, but if the code has bug it will be caught faster
+        assert new_player_pos not in new_box_pos, "New player position in new box position"
+        assert self.cell_at(new_player_pos) is not CellState.WALL, f"New player box in wall: {new_player_pos}"
+        assert len(new_box_pos) == len(self.box_cells), "Number of box should be the same"
+        assert all([self.cell_at(box_pos) is not CellState.WALL
+                    for box_pos in new_box_pos]), f"New box positions in wall {new_box_pos}"
+
+        # Everything is correct we can reset board's state now
+        self.player_pos = new_player_pos
+        if new_player_pos in self.goal_cells:
+            self.set_cell_at(new_player_pos, CellState.PLAYER_ON_GOAL)
+        else:
+            self.set_cell_at(new_player_pos, CellState.PLAYER)
+        self.box_cells = []
+        for box_pos in new_box_pos:
+            if box_pos in self.goal_cells:
+                self.set_cell_at(box_pos, CellState.BOX_ON_GOAL)
+            else:
+                self.set_cell_at(box_pos, CellState.BOX)
+            self.box_cells.append(box_pos)
 
     # getter
     def cell_at(self, pos):

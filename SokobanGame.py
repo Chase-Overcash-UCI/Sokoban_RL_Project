@@ -6,7 +6,7 @@ from abc import abstractmethod
 
 class SokobanGame:
     def __init__(self, input_file, debug=True):
-        self.game = Sokoban(input_file)
+        self.game = Sokoban(input_file, debug)
         self.input_file = input_file
         self.debug = debug
 
@@ -20,6 +20,7 @@ class SokobanGame:
         move_selected = []
         while True:
             if self.debug:
+                print(f"Current player pos: {self.game.player_pos}")
                 print("Next valid move:", [move.name for move in self.game.valid_moves])
             action, reset, game_exit = self.get_input()
             if reset:
