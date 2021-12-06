@@ -19,12 +19,12 @@ if __name__ == "__main__":
 
     # Or if you want to apply MC/DFS/BFS/etc.:
 
-    # BFS TESTING CODE:
+    # DFS TESTING CODE:
     # sokoban_base = Sokoban(input_file)
     # root = State(sokoban_base,None,None)
-    # root.BFS(root)
-    # sys.exit("BFS")
-    # END BFS TESTING CODE.
+    # root.DFS(root)
+    # sys.exit("DFS")
+    # END DFS TESTING CODE.
 
     # Using this will simulate the game on screen
     # q to quit, w to speed up, s to slow down (or comment out the sleep for unlimited speed)
