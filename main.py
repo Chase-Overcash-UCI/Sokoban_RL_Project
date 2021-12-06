@@ -21,9 +21,8 @@ if __name__ == "__main__":
 
     # BFS TESTING CODE:
     # sokoban_base = Sokoban(input_file)
-    # x, y = sokoban_base.player_pos
-    # root = State(x, y, None, None)
-    # root.BFS(sokoban_base, root)
+    # root = State(sokoban_base,None,None)
+    # root.BFS(root)
     # sys.exit("BFS")
     # END BFS TESTING CODE.
 
