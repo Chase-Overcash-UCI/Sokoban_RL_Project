@@ -20,6 +20,14 @@ class CellState(Enum):
     BOX_ON_GOAL = 'X'
 
 
+pos_dif_to_action = {
+    (0, -1): Action.LEFT,
+    (0, 1): Action.RIGHT,
+    (-1, 0): Action.UP,
+    (1, 0): Action.DOWN
+}
+
+
 def convert_text_to_board(file_path):
     with open(file_path, 'r') as f:
         lines = f.readlines()
@@ -55,6 +63,14 @@ def convert_text_to_board(file_path):
 
 def get_new_pos(pos, action):
     return pos[0] + action.value[0], pos[1] + action.value[1]
+
+
+def manhattan_distance(pos1, pos2):
+    return abs(pos2[0] - pos1[0]) + abs(pos2[1] - pos1[1])
+
+
+def get_pos_dif(pos1, pos2):
+    return pos1[0] - pos2[0], pos1[1] - pos2[1]
 
 
 # accepts a numpy 2d array as board

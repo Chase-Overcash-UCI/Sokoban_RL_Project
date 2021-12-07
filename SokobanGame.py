@@ -18,10 +18,12 @@ class SokobanGame:
         self.render()
         num_moves = 0
         move_selected = []
-        while True:
+        while not self.game.is_completed():
             if self.debug:
                 print(f"Current player pos: {self.game.player_pos}")
                 print("Next valid move:", [move.name for move in self.game.valid_moves])
+                print("Pushable boxes: ", self.game.get_pushable_box())
+                print("Boxes in corner: ", self.game.boxes_in_corner)
             action, reset, game_exit = self.get_input()
             if reset:
                 print("Resetting...")
