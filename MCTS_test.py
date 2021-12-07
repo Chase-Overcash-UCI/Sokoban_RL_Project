@@ -15,4 +15,4 @@ if __name__ == '__main__':
         for a in solution:
             counter += 1
             game.move(a)
-            input('STEP:',counter,'___________________________')
+            input('PAUSE')

@@ -5,14 +5,14 @@ from util import print_board
 
 EPSILON = 1 # for epsilon greedy, 0 <= EPSILON <= 1
 ALPHA = 0.1 # Learning rate
-MAX_DEPTH = 50
+MAX_DEPTH = 100
 #MAX_EPISODE = 10000
 
 
 class agent:
 
     def __init__(self, file):
-        self.game = Sokoban(input_path=file,debug=True)
+        self.game = Sokoban(input_path=file,debug=False)
         self.epsilon = EPSILON
         
         self.board = copy.copy(self.game.board)
@@ -25,6 +25,7 @@ class agent:
         solved = False
         episode = 0
         while not solved:
+            #print('new episode')
             step = 0
             solution = list()
             states = set()
@@ -35,6 +36,7 @@ class agent:
                 current_state = self.get_current_state()
                 states.add(current_state)
                 action = self.MCTS_step()
+                
                 done, r = self.make_move(action, step)
                 solution.append(action)
                 step += 1
@@ -49,9 +51,15 @@ class agent:
             if solved:
                 return solution
 
+            #print('update')
             # MC update
             self.MC_update(states,r)
-
+            #print('reset')
+            #print(self.game.box_cells)
+            #print(self.game.player_pos)
+            #print(self.player)
+            #print(self.boxes)
+            #print_board(self.game.board)
             # Reset
             self.game.set_box_and_player_pos(self.boxes,self.player)
 
@@ -61,6 +69,7 @@ class agent:
     def MCTS_step(self):
         self.game.valid_moves = self.game.get_current_valid_moves()
         valid_acts = self.game.valid_moves
+        
         next_states = [(a,self.get_state_value(self.get_next_state(a))) for a in valid_acts]
         return self.epsilon_greedy_move(valid_acts, next_states)
 
@@ -87,6 +96,7 @@ class agent:
             return 0
     
     def get_next_state(self, action):
+        #print(action)
         temp_player = copy.copy(self.game.player_pos)
         temp_boxes = copy.copy(self.game.box_cells)
 

@@ -83,7 +83,9 @@ class Sokoban:
             return True
         else:  # next pos is box
             next_box_pos = get_new_pos(next_pos, action)
-            if self.cell_at(next_box_pos) is CellState.WALL or self.cell_at(next_box_pos) is CellState.BOX or self.cell_at(next_box_pos) is CellState.BOX_ON_GOAL:
+            if (self.cell_at(next_box_pos) is CellState.WALL or
+             self.cell_at(next_box_pos) is CellState.BOX or
+              self.cell_at(next_box_pos) is CellState.BOX_ON_GOAL):
                 return False
             return True
 
@@ -143,9 +145,10 @@ class Sokoban:
                 self.set_cell_at(box_pos, CellState.GOAL)
             else:
                 self.set_cell_at(box_pos, CellState.EMPTY)
-
+        
+        self.box_cells = list()
         self.set_player_pos(new_player_pos, update_valid_move=False)
-        self.box_cells = []
+        #self.box_cells = []
 
         for box_pos in new_box_pos:
             if box_pos in self.goal_cells:
