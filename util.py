@@ -84,3 +84,16 @@ def print_board(board):
         print()
 
     print("=" * 40)
+
+def soln_to_str(soln):
+    string = ''
+    for a in soln:
+        if a == Action.DOWN:
+            string += 'd'
+        elif a == Action.LEFT:
+            string += 'l'
+        elif a == Action.UP:
+            string += 'u'
+        elif a == Action.RIGHT:
+            string += 'r'
+    return string

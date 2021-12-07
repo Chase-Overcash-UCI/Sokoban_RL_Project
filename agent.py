@@ -3,10 +3,13 @@ import copy
 import numpy as np
 from util import print_board
 
-EPSILON = 1 # for epsilon greedy, 0 <= EPSILON <= 1
-ALPHA = 0.1 # Learning rate
-MAX_DEPTH = 100
-#MAX_EPISODE = 10000
+AD_FREQ = 500 # frequency of adjusting epsilon
+EPSILON = 0.2 # for epsilon greedy, 0 <= EPSILON <= 1
+EPSILON_DROP_RATE = 0.85 # epsilon *= EPSILON_DROP_RATE for every AD_FREQ episode
+ALPHA = 0.01 # Learning rate
+GAMMA = 0.8 # TD DISCOUNT FACTOR
+MAX_DEPTH = 200
+MAX_EPISODE = 10000
 
 
 class agent:
@@ -33,40 +36,78 @@ class agent:
             episode += 1
 
             while (not done) and (step < MAX_DEPTH):
-                current_state = self.get_current_state()
-                states.add(current_state)
-                action = self.MCTS_step()
+                #current_state = self.get_current_state()
+                #states.add(current_state)
+                #action = self.get_next_action()
                 
-                done, r = self.make_move(action, step)
-                solution.append(action)
+                #done, r = self.make_move(action, step)
+                #solution.append(action)
+                solved, done, r = self.MC_step(step,solution,states)
                 step += 1
 
-            if (episode % 1000 == 0):
-                self.epsilon *= 0.9
+            if (episode % AD_FREQ == 0):
+                self.epsilon *= EPSILON_DROP_RATE
                 print('episode:',episode,'______________________________________')
                 print_board(self.game.board)
-                #input()
 
-            solved = self.is_solved()
-            if solved:
-                return solution
-
-            #print('update')
-            # MC update
             self.MC_update(states,r)
-            #print('reset')
-            #print(self.game.box_cells)
-            #print(self.game.player_pos)
-            #print(self.player)
-            #print(self.boxes)
-            #print_board(self.game.board)
-            # Reset
             self.game.set_box_and_player_pos(self.boxes,self.player)
+
+            if episode >= MAX_EPISODE:
+                #restart
+                episode = 0
+                self.value_board = dict()
+                self.epsilon = EPSILON
 
         return solution
 
+    def TD(self):
+        solved = False
+        episode = 0
+        while not solved:
+            step = 0
+            solution = list()
+            done = False
+            episode += 1
 
-    def MCTS_step(self):
+            while (not done) and (step<MAX_DEPTH):
+                solved, done = self.TD_step(step,solution)
+                step += 1
+            
+            if (episode % AD_FREQ == 0):
+                self.epsilon *= EPSILON_DROP_RATE
+                print('episode:',episode,'______________________________________')
+                print_board(self.game.board)
+            
+            self.game.set_box_and_player_pos(self.boxes,self.player)
+
+            if episode >= MAX_EPISODE:
+                #restart
+                episode = 0
+                self.value_board = dict()
+                self.epsilon = EPSILON
+        
+        return solution
+
+    
+    def TD_step(self,step,solution):
+        current_state = self.get_current_state()
+        action = self.get_next_action()
+        solved, done, r = self.make_move(action, step)
+        solution.append(action)
+        next_state = self.get_current_state()
+        self.TD_update(current_state,next_state,r)
+        return solved, done
+
+    def MC_step(self,step,solution,states):
+        current_state = self.get_current_state()
+        states.add(current_state)
+        action = self.get_next_action()
+        solution.append(action)
+        return self.make_move(action, step)
+        
+
+    def get_next_action(self):
         self.game.valid_moves = self.game.get_current_valid_moves()
         valid_acts = self.game.valid_moves
         
@@ -126,7 +167,7 @@ class agent:
 
     def get_reward(self, step, done, solved, on_off_goal):
         temp = 2*int(solved) - int(done)
-        return step*(-0.1) + int(on_off_goal) * (1.0) + temp * (10.0)
+        return step*(-0.1) + int(on_off_goal) * (10.0) + temp * (100.0)
 
     def is_solved(self):
         for box in self.game.box_cells:
@@ -141,6 +182,14 @@ class agent:
                 self.value_board[state] += ALPHA * (r - self.value_board[state])
             except:
                 self.value_board[state] = ALPHA * (r - 0)
+    
+    def TD_update(self, current, next, r):
+        if current not in self.value_board.keys():
+            self.value_board[current] = 0
+        if next not in self.value_board.keys():
+            self.value_board[next] = 0
+        
+        self.value_board[current] += ALPHA * (r + GAMMA*self.value_board[next] - self.value_board[current])
 
 
     def make_move(self, action, step):
@@ -152,6 +201,6 @@ class agent:
         solved = self.is_solved()
 
         r = self.get_reward(step,done,solved,on_off_goal)
-        return done, r
+        return solved, done, r
 
     
