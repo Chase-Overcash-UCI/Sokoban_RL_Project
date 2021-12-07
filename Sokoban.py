@@ -83,7 +83,7 @@ class Sokoban:
             return True
         else:  # next pos is box
             next_box_pos = get_new_pos(next_pos, action)
-            if self.cell_at(next_box_pos) is CellState.WALL:
+            if self.cell_at(next_box_pos) is CellState.WALL or self.cell_at(next_box_pos) is CellState.BOX or self.cell_at(next_box_pos) is CellState.BOX_ON_GOAL:
                 return False
             return True
 
