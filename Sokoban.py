@@ -101,7 +101,7 @@ class Sokoban:
                 return False
         return True
 
-    def set_player_pos(self, new_player_pos):
+    def set_player_pos(self, new_player_pos, update_valid_move=True):
         if self.player_pos == new_player_pos:
             return
 
@@ -121,23 +121,34 @@ class Sokoban:
 
         # reset player position and valid moves
         self.player_pos = new_player_pos
-        self.valid_moves = self.get_current_valid_moves()
+        if update_valid_move:
+            self.valid_moves = self.get_current_valid_moves()
 
     def set_box_and_player_pos(self, new_box_pos: List[tuple], new_player_pos: tuple):
         # These shouldn't happen, but if the code has bug it will be caught faster
         assert len(new_box_pos) == len(self.box_cells), "Number of box should be the same"
         assert all([self.cell_at(box_pos) is not CellState.WALL
                     for box_pos in new_box_pos]), f"New box positions in wall {new_box_pos}"
+        assert new_player_pos not in new_box_pos
 
         # Everything is correct we can reset board's state now
-        self.set_player_pos(new_player_pos)
+        # reset box cell on board information
+        for box_pos in self.box_cells:
+            if self.cell_at(box_pos) is CellState.BOX_ON_GOAL:
+                self.set_cell_at(box_pos, CellState.GOAL)
+            else:
+                self.set_cell_at(box_pos, CellState.EMPTY)
+
+        self.set_player_pos(new_player_pos, update_valid_move=False)
         self.box_cells = []
+
         for box_pos in new_box_pos:
             if box_pos in self.goal_cells:
                 self.set_cell_at(box_pos, CellState.BOX_ON_GOAL)
             else:
                 self.set_cell_at(box_pos, CellState.BOX)
             self.box_cells.append(box_pos)
+        self.valid_moves = self.get_current_valid_moves()
 
     # getter
     def cell_at(self, pos):
