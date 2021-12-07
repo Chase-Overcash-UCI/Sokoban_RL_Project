@@ -8,6 +8,7 @@ import random
 from State import State
 from util import Action
 input_file = "sample_inputs/sokoban01.txt"
+from Q_Learning import Q_Learning
 
 if __name__ == "__main__":
     # Play with terminal
@@ -26,6 +27,14 @@ if __name__ == "__main__":
     # root.DFS(root)
     # sys.exit("DFS")
     # END DFS TESTING CODE.
+
+    #Q_LEARNING TESTING CODE:
+    sokoban_base = Sokoban(input_file)
+    q_learning = Q_Learning()
+    q_learning.exploration(sokoban_base,10000)
+    sys.exit("Q_LEARNING")
+    #END Q_LEARNING TESTING CODE.
+
 
     # Using this will simulate the game on screen
     # q to quit, w to speed up, s to slow down (or comment out the sleep for unlimited speed)
