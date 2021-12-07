@@ -8,7 +8,8 @@ import random
 from State import State
 from util import Action
 input_file = "sample_inputs/sokoban01.txt"
-from Q_Learning import Q_Learning
+from TD_QL import Q_Learning
+from Q_Node import Q_Node
 
 if __name__ == "__main__":
     # Play with terminal
@@ -28,12 +29,13 @@ if __name__ == "__main__":
     # sys.exit("DFS")
     # END DFS TESTING CODE.
 
-    #Q_LEARNING TESTING CODE:
-    sokoban_base = Sokoban(input_file)
-    q_learning = Q_Learning()
-    q_learning.exploration(sokoban_base,10000)
-    sys.exit("Q_LEARNING")
-    #END Q_LEARNING TESTING CODE.
+    #TD_QL TESTING CODE:
+    # sokoban_base = Sokoban(input_file)
+    # root = Q_Node (sokoban_base,None,None)
+    # td_ql = TD_QL()
+    # td_ql.exploration(root,1000)
+    # sys.exit("Q_LEARNING")
+    #END TD_QL TESTING CODE.
 
 
     # Using this will simulate the game on screen
