@@ -7,19 +7,23 @@ class Sokoban:
     # board is a numpy 2D array, all other are list of tuples
     # This way it's easier to index board
 
-    def __init__(self, input_path, debug=True, mode=0, board=None):
-        if mode == 0:
-            self.board, self.box_cells, self.goal_cells, self.player_pos = convert_text_to_board(input_path)
-            self.n_row, self.n_col = self.board.shape[0], self.board.shape[1]
-            self.valid_moves = self.get_current_valid_moves()
-            self.action_list = [action for action in Action]
-            self.corner_seq_pos = [Action.LEFT, Action.UP, Action.RIGHT, Action.DOWN]
-            self.boxes_in_corner = []
-            self.num_actions = len(Action)
-            self.debug = debug
+    def __init__(self,  input_path=None, board=None, debug=True):
+        assert (board is not None) ^ (input_path is not None), "Either board or input path must present"
 
-        elif mode == 1:
-            self.set_board_to(board)
+        if input_path:
+            self.board, self.box_cells, self.goal_cells, self.player_pos = convert_text_to_board(input_path)
+        elif board:
+            self.__set_board_to(board)
+
+        assert self.board is not None and self.box_cells and self.goal_cells and self.player_pos is not None
+
+        self.n_row, self.n_col = self.board.shape[0], self.board.shape[1]
+        self.valid_moves = self.get_current_valid_moves()
+        self.action_list = [action for action in Action]
+        self.corner_seq_pos = [Action.LEFT, Action.UP, Action.RIGHT, Action.DOWN]
+        self.boxes_in_corner = []
+        self.num_actions = len(Action)
+        self.debug = debug
 
     # If move is not legal we can just skip the whole method
     def move(self, action):
@@ -157,6 +161,14 @@ class Sokoban:
     # set cell to CellState
     def set_cell_at(self, pos, state):
         self.board[pos[0], pos[1]] = state
+
+    def get_num_box_on_goal(self):
+        num_box_on_goal = 0
+        for box in self.box_cells:
+            if box in self.goal_cells:
+                num_box_on_goal += 1
+
+        return num_box_on_goal
 
     def get_boxes_in_corner(self):
         boxes = []
@@ -331,29 +343,19 @@ class Sokoban:
                 if self.board[i, j] == CellState.PLAYER or self.board[i, j] == CellState.PLAYER_ON_GOAL:
                     self.player_pos = (i, j)
 
-    # update goal_cells, box_cells, player_pos, valid_moves
-    def _update_all(self):
-        self.goal_cells = list()
-        self.box_cells = list()
-
-        for i in range(self.n_row):
-            for j in range(self.n_col):
-                if self.board[i, j] == CellState.GOAL or self.board[i, j] == CellState.BOX_ON_GOAL:
-                    self.goal_cells.append((i, j))
-                elif self.board[i, j] == CellState.BOX or self.board[i, j] == CellState.BOX_ON_GOAL:
-                    self.box_cells.append((i, j))
-                    if self.board[i, j] == CellState.BOX_ON_GOAL:
-                        self.num_on_goal += 1
-                elif self.board[i, j] == CellState.PLAYER or self.board[i, j] == CellState.PLAYER_ON_GOAL:
-                    self.player_pos = (i, j)
-
-        self.valid_moves = self.get_current_valid_moves()
-
     # set self.board to a given board
-    def set_board_to(self, board):
-        self.board = board
-        self.num_on_goal = 0
+    def __set_board_to(self, board):
+        self.board = np.copy(board)
+        self.goal_cells = []
+        self.box_cells = []
+        self.player_pos = None
 
-        self.n_row, self.n_col = self.board.shape[0], self.board.shape[1]
-
-        self._update_all()
+        for r in range(self.board.shape[0]):
+            for c in range(self.board.shape[1]):
+                if self.board[r, c] == CellState.GOAL or self.board[r, c] == CellState.BOX_ON_GOAL or \
+                        self.board[r, c] == CellState.PLAYER_ON_GOAL:
+                    self.goal_cells.append((r, c))
+                if self.board[r, c] == CellState.BOX or self.board[r, c] == CellState.BOX_ON_GOAL:
+                    self.box_cells.append((r, c))
+                if self.board[r, c] == CellState.PLAYER or self.board[r, c] == CellState.PLAYER_ON_GOAL:
+                    self.player_pos = (r, c)
