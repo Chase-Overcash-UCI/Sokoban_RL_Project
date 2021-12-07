@@ -20,12 +20,12 @@ class State:
             self.path = ''
         else:
             temp = copy.deepcopy(parent)
+            self.parent_direction = parent_direction
             temp.sokoban.move(parent_direction)
+            self.path = temp.path + str(parent_direction)
             self.sokoban = temp.getSokoban()
             self.parent = parent
-            self.parent_direction = parent_direction
-            self.x,self.y = sokoban.player_pos
-            self.path = parent.path + str(parent_direction)
+            self.x,self.y = temp.sokoban.player_pos
 
     def getX(self):
         return self.x
@@ -74,7 +74,6 @@ class State:
         start_time = time.time_ns()
         diving = True
         while diving:
-            print("dive")
             if len(frontier) == 0:
                 print("DFS failed")
                 return
