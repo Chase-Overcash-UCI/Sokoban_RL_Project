@@ -24,6 +24,7 @@ class Sokoban:
         self.boxes_in_corner = []
         self.num_actions = len(Action)
         self.debug = debug
+        self.visit_count = 0
 
     # If move is not legal we can just skip the whole method
     def move(self, action):
@@ -359,3 +360,7 @@ class Sokoban:
                     self.box_cells.append((r, c))
                 if self.board[r, c] == CellState.PLAYER or self.board[r, c] == CellState.PLAYER_ON_GOAL:
                     self.player_pos = (r, c)
+
+    def iterate_visit_count(self):
+        self.visit_count += 1
+        

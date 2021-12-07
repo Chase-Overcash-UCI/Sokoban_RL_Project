@@ -1,7 +1,5 @@
 import sys
-
 import numpy
-
 import util
 from util import Action
 from Sokoban import Sokoban
