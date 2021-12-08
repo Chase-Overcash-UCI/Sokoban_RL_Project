@@ -32,8 +32,8 @@ if __name__ == "__main__":
     #TD_QL TESTING CODE:
     # sokoban_base = Sokoban(input_file)
     # root = Q_Node (sokoban_base,None,None)
-    # td_ql = TD_QL()
-    # td_ql.exploration(root,1000)
+    # td_ql = Q_Learning()
+    # td_ql.exploration(root,10000)
     # sys.exit("Q_LEARNING")
     #END TD_QL TESTING CODE.
 

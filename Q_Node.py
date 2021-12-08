@@ -10,16 +10,21 @@ class Q_Node:
     def __init__(self, sokoban, parent_action, parent):
         if parent is None:
             self.parent = None
-            self.parent_action = None
+            self.action = None
             self.sokoban = sokoban
             self.path = ''
-            self.value = 0.0
+            self.key = ''
+            self.set_hash_key()
+
         else:
             temp = copy.deepcopy(sokoban)
-            self.sokoban = temp.move(parent_action)
+            temp.move(parent_action)
+            self.sokoban = temp
             self.action = parent_action
             self.path = parent.path + str(parent_action)
-            self.value = parent.value * .98 #need to doublecheck
+            self.key = ''
+            self.set_hash_key()
+            self.parent = parent
 
     def getSokoban(self):
         return self.sokoban
@@ -38,3 +43,13 @@ class Q_Node:
 
     def getValue(self):
         return self.value
+
+    def set_hash_key(self):
+        hash_key = ''
+        for row in range(len(self.sokoban.board)):
+            for col in range(len(self.sokoban.board[0])):
+                hash_key += str(self.sokoban.board[row][col])
+        self.key = hash_key
+
+    def get_hash_key(self):
+        return self.key
