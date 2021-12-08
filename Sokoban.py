@@ -25,6 +25,8 @@ class Sokoban:
         self.num_actions = len(Action)
         self.debug = debug
         self.visit_count = 0
+        self.did_push_box = False
+        self.box_pushed = None
 
     # If move is not legal we can just skip the whole method
     def move(self, action):
@@ -37,6 +39,11 @@ class Sokoban:
         # compare against BOX and BOX_ON_GOAL it's faster to write but less efficient
         if player_next_pos in self.box_cells:
             self.__push_box(player_next_pos, action)
+            self.did_push_box = True
+            self.pushed_box = get_new_pos(player_next_pos,action)
+        else:
+            self.did_push_box = False
+            self.pushed_box = None
 
         self.set_player_pos(player_next_pos)
         if self.debug:
@@ -366,4 +373,180 @@ class Sokoban:
 
     def iterate_visit_count(self):
         self.visit_count += 1
-        
+
+    # checks if a box was pushed, returns a tuple of boolean, position tuple
+    def get_pushed_box(self):
+        #determine what box was pushed
+        return self.did_push_box, self.pushed_box
+
+    #returns true if a vertical wall adjacent to a box causes an unsolvable state, return false otherwise
+    def vertical_wall_check(self, box_pos, wall_pos,direction):
+        box_x, box_y = box_pos
+        wall_x, wall_y = wall_pos
+
+        # if there are no inbound openings on wall axis, state is unsolvable
+        if wall_x == 0 or wall_x == len(self.board) -1:
+            return True
+
+        # next check if there are achievable goals on the axis that the box can still move to:
+        found_goal = None
+        for goal in self.goal_cells:
+            goal_x,goal_y = goal
+            if goal_x == box_x:
+                #found a goal on this axis but can we get to it directly?
+                goal_path = []
+                if goal_x > box_x:
+                    goal_path = self.board[box_x+1:goal_x,box_y]
+                elif goal_x < box_x:
+                    goal_path = np.flip(self.board[goal_x+1:box_x, box_y])
+                pathable = True
+                # no walls in way means that box can directly be pathed there
+                for cell_to_check in goal_path:
+                    if self.cell_at(cell_to_check) == CellState.WALL:
+                        pathable = False
+                        break
+                if pathable:
+                    return False
+
+        # no goals on this axis, but is there an opening that lets us escape?
+        # if there is an opening there needs to b an adjacent spot to push
+        wall_axis = self.board[:,wall_y]
+        box_axis =  self.board[:,box_y]
+        parallel_axis = []
+        if direction == 'LEFT':
+            parallel_axis = self.board[:,box_y+1]
+        elif direction == 'RIGHT':
+            parallel_axis = self.board[:,box_y-1]
+        # keeps track if opening is part of the actual map or not, if it is inboundes there has to be a wall before it at some point
+        inbounds = False
+        index = 0
+        for cell in wall_axis:
+            x,y = cell
+            if self.cell_at(cell) == CellState.WALL and not inbounds:
+                inbounds = True
+            if inbounds and self.cell_at(cell) == CellState.EMPTY and self.cell_at(parallel_axis[0]) == CellState.EMPTY:
+                # an opening? or is it, make sure that it is not out of bounds, make sure that box can get there
+                box_path = []
+                if x > box_x:
+                    box_path = self.board[box_x+1:x,box_y ]
+                else:
+                    box_path = np.flip(self.board[x+1:box_x,box_y])
+                walkable = True
+                for cell_to_check in box_path:
+                    if self.cell_at(cell_to_check) == CellState.WALL:
+                        walkable == False
+                        break
+                if walkable:
+                    return False
+            index +=1
+        return True
+
+    #returns true if a horizontal wall adjacent to a box causes an unsolvable state, return false otherwise
+    def horizonal_wall_check(self, box_pos, wall_pos):
+        box_x, box_y = box_pos
+        wall_x, wall_y = wall_pos
+        # if the wall is a problem border: state is unsolvable
+        if wall_y == 0 or wall_y >= len(self.board[0])-1:
+            return True
+        # first check if there are achievable goals on the axis that the box can still move to:
+        found_goal = None
+        for goal in self.goal_cells:
+            goal_x,goal_y = goal
+            if goal_y == box_y:
+                #found a goal on this axis but can we get to it directly?
+                goal_path = []
+                if goal_y > box_y:
+                    goal_path = self.board[box_x,box_y+1:goal_y]
+                elif goal_y < box_y:
+                    goal_path = np.flip(self.board[box_x,goal_y+1:box_y])
+                # no walls in way means that box can directly be pathed there
+                pathable = True
+                for cell_to_check in goal_path:
+                    if self.cell_at(cell_to_check) == CellState.WALL:
+                        pathable = False
+                        break
+                if pathable:
+                    return False
+
+        # if there are no inbound openings on wall axis, state is unsolvable
+        # no goals on this axis, but is there an opening that lets us escape?
+        # if there is an opening there needs to b an adjacent spot to push
+        wall_axis = self.board[wall_x,:]
+        box_axis =  self.board[box_x,:]
+        parallel_axis = []
+        if direction == 'UP':
+            parallel_axis = self.board[box_x+1,:]
+        elif direction == 'RIGHT':
+            parallel_axis = self.board[box_x-1,:]
+        # keeps track if opening is part of the actual map or not, if it is inboundes there has to be a wall before it at some point
+        inbounds = False
+        index = 0
+        for cell in wall_axis:
+            x,y = cell
+            if self.cell_at(cell) == CellState.WALL and not inbounds:
+                inbounds = True
+            if inbounds and self.cell_at(cell) == CellState.EMPTY and self.cell_at(parallel_axis[index]) == CellState.EMPTY:
+                # an opening? or is it, make sure that it is not out of bounds, make sure that box can get there
+                box_path = []
+                if y > box_y:
+                    box_path = self.board[box_x,box_y+1:y]
+                else:
+                    box_path = np.flip(self.board[box_x,y+1:box_y])
+                walkable = True
+                for cell_to_check in box_path:
+                    if self.cell_at(cell_to_check) == CellState.WALL:
+                        walkable == False
+                        break
+                if walkable:
+                    return False
+            index+=1
+        return True
+
+    def is_unsolvable(self,box):
+        x,y = box
+        # case 0: box pushed on goal
+        if (self.cell_at((x,y)) == CellState.BOX_ON_GOAL):
+            return False
+
+        # case1: a box is in a corner that is not a goal
+        # case2: a box against a wall but can still reach a goal
+        # case3: a box is against a wall and can no longer reach a goal
+
+        #identify adjacent space
+        left_adjacent = (x,y-1)
+        left_state = self.cell_at(left_adjacent)
+        right_adjacent = (x,y+1)
+        right_state = self.cell_at(right_adjacent)
+        up_adjacent = (x-1,y)
+        up_state = self.cell_at(up_adjacent)
+        down_adjacent= (x+1,y)
+        down_state = self.cell_at(down_adjacent)
+
+        #check if in a corner
+        if (left_state == CellState.WALL and up_state == CellState.WALL ) or (left_state == CellState.WALL and down_state == CellState.WALL):
+            #stuck in corner
+            return True
+        elif (right_state == CellState.WALL and up_state == CellState.WALL) or (right_state == CellState.WALL and down_state == CellState.WALL):
+            #stuck in coern
+            return True
+        else:
+            # now check for horizontal, vertical walls that create unsolveable states
+
+            # horizontal wall check
+            if up_state == CellState.WALL:
+                return self.horizonal_wall_check(box, up_adjacent, 'UP')
+            elif down_state == CellState.WALL:
+                return self.horizonal_wall_check(box, down_adjacent, 'DOWN')
+            # vertical wall check
+            elif left_state == CellState.WALL:
+                return self.vertical_wall_check(box,left_adjacent,'LEFT')
+            elif right_state == CellState.WALL:
+                return self.vertical_wall_check(box,right_adjacent, 'RIGHT')
+            else:
+                return False
+
+    def is_solved(self):
+        for box in self.box_cells:
+            if box not in self.goal_cells:
+                return False
+        return True

@@ -78,8 +78,10 @@ class State:
             curr = frontier.pop()
             if not self.hasVisited(visited,curr.sokoban.board):
                 visited.append(curr.sokoban.board)
-                if curr.sokoban.is_completed():
+                if curr.sokoban.is_solved():
                     print("soln found")
+                    print(str(curr.sokoban.board))
+                    print(curr.getPath())
                     return curr.getPath()
                 for move in curr.sokoban.get_current_valid_moves():
                     child = State(curr.sokoban,curr,move)

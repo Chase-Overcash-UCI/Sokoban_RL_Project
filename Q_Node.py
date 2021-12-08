@@ -9,7 +9,8 @@ import copy
 class Q_Node:
     def __init__(self, sokoban, parent_action, parent):
         if parent is None:
-            action = None
+            self.parent = None
+            self.parent_action = None
             self.sokoban = sokoban
             self.path = ''
             self.value = 0.0
