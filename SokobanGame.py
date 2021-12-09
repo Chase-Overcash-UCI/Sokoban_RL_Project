@@ -6,7 +6,7 @@ from abc import abstractmethod
 
 class SokobanGame:
     def __init__(self, input_file, debug=True):
-        self.game = Sokoban(input_file, debug)
+        self.game = Sokoban(input_file, debug=debug)
         self.input_file = input_file
         self.debug = debug
 
@@ -18,7 +18,9 @@ class SokobanGame:
         self.render()
         num_moves = 0
         move_selected = []
-        while not self.game.is_completed():
+        completed, failed = False, False
+
+        while not completed:
             if self.debug:
                 print(f"Current player pos: {self.game.player_pos}")
                 print("Next valid move:", [move.name for move in self.game.valid_moves])
@@ -35,6 +37,7 @@ class SokobanGame:
                 self.game.move(action)
                 move_selected.append(action.name)
             self.render()
+            completed, failed = self.game.is_completed()
 
             if self.game.is_completed():
                 print(f"Game is completed in {num_moves} moves!!!")
@@ -53,8 +56,8 @@ class SokobanGame:
 
 
 class SokobanPygame(SokobanGame):
-    def __init__(self, input_file, grid_size=50):
-        super().__init__(input_file)
+    def __init__(self, input_file, debug=True, grid_size=50):
+        super().__init__(input_file, debug=debug)
         self.grid_size = grid_size
         self.__init_config()
         self.__init_pygame_engine()

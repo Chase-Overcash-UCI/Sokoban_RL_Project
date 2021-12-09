@@ -8,6 +8,7 @@ if __name__ == '__main__':
     counter = 0
     for f in listdir(path):
         file = path+f
+        print(file)
         counter += 1
         game = Sokoban(file)
         my_agent = agent(file)

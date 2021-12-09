@@ -197,7 +197,7 @@ class agent:
         self.game.move(action)
         on_off_goal = self.get_num_on_goal() - num_on_goal # change in number of boxes on goals, 1 if the prev action pushes a box on goal, 0 if no change, -1 if prev action pushes a box off goal.
         
-        done = self.game.is_completed()
+        done, failed = self.game.is_completed()
         solved = self.is_solved()
 
         r = self.get_reward(step,done,solved,on_off_goal)

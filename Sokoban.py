@@ -1,6 +1,6 @@
 import numpy as np
 from util import convert_text_to_board, print_board, get_new_pos, Action, CellState, get_pos_dif, pos_dif_to_action
-from typing import List
+from typing import List, Collection
 
 
 class Sokoban:
@@ -105,15 +105,16 @@ class Sokoban:
         return valid_moves
 
     # These now only check for hard corner, soft corner like box next to box currently not considered
+    # return 2 status (game complete, failed state)
     def is_completed(self):
         if len(self.boxes_in_corner) > 0:
             for box in self.boxes_in_corner:
                 if self.cell_at(box) is not CellState.BOX_ON_GOAL:
-                    return True
+                    return True, True
         for box_pos in self.box_cells:
             if box_pos not in self.goal_cells:
-                return False
-        return True
+                return False, False
+        return True, False
 
     def set_player_pos(self, new_player_pos, update_valid_move=True):
         if self.player_pos == new_player_pos:
@@ -138,7 +139,7 @@ class Sokoban:
         if update_valid_move:
             self.valid_moves = self.get_current_valid_moves()
 
-    def set_box_and_player_pos(self, new_box_pos: List[tuple], new_player_pos: tuple):
+    def set_box_and_player_pos(self, new_box_pos: Collection[tuple], new_player_pos: tuple):
         # These shouldn't happen, but if the code has bug it will be caught faster
         assert len(new_box_pos) == len(self.box_cells), "Number of box should be the same"
         assert all([self.cell_at(box_pos) is not CellState.WALL
