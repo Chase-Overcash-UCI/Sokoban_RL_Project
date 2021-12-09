@@ -386,7 +386,6 @@ class Sokoban:
         wall_x, wall_y = wall_pos
 
         # next check if there are achievable goals on the axis that the box can still move to:
-        found_goal = None
         for goal in self.goal_cells:
             goal_x,goal_y = goal
             if goal_x == box_x:
@@ -399,7 +398,7 @@ class Sokoban:
                 pathable = True
                 # no walls in way means that box can directly be pathed there
                 for diff_x in range(0,len(goal_path)):
-                    if self.cell_at(diff_x, y) == CellState.WALL:
+                    if self.cell_at(diff_x, box_y) == CellState.WALL:
                         pathable = False
                         break
                 if pathable:
@@ -433,12 +432,12 @@ class Sokoban:
                     box_path = self.board[box_x+1:x,box_y ]
                 else:
                     box_path = np.flip(self.board[x+1:box_x,box_y])
-                walkable = True
+                pathable = True
                 for diff_x in range(0,len(box_path)):
                     if self.cell_at((diff_x,box_y)) == CellState.WALL:
-                        walkable == False
+                        pathable == False
                         break
-                if walkable:
+                if pathable:
                     return False
         return True
 
@@ -447,7 +446,6 @@ class Sokoban:
         box_x, box_y = box_pos
         wall_x, wall_y = wall_pos
         # first check if there are achievable goals on the axis that the box can still move to:
-        found_goal = None
         for goal in self.goal_cells:
             goal_x,goal_y = goal
             if goal_y == box_y:
@@ -533,7 +531,7 @@ class Sokoban:
             #stuck in corner
             return True
         elif (right_state == CellState.WALL and up_state == CellState.WALL) or (right_state == CellState.WALL and down_state == CellState.WALL):
-            #stuck in coern
+            #stuck in corner
             return True
         else:
             # now check for horizontal, vertical walls that create unsolveable states
