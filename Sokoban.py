@@ -385,10 +385,6 @@ class Sokoban:
         box_x, box_y = box_pos
         wall_x, wall_y = wall_pos
 
-        # if there are no inbound openings on wall axis, state is unsolvable
-        if wall_x == 0 or wall_x == len(self.board) -1:
-            return True
-
         # next check if there are achievable goals on the axis that the box can still move to:
         found_goal = None
         for goal in self.goal_cells:
@@ -408,6 +404,10 @@ class Sokoban:
                         break
                 if pathable:
                     return False
+
+        # if there are no inbound openings on wall axis, state is unsolvable
+        if wall_x == 0 or wall_x == len(self.board) - 1:
+            return True
 
         # no goals on this axis, but is there an opening that lets us escape?
         # if there is an opening there needs to b an adjacent spot to push
@@ -446,9 +446,6 @@ class Sokoban:
     def horizonal_wall_check(self, box_pos, wall_pos, direction):
         box_x, box_y = box_pos
         wall_x, wall_y = wall_pos
-        # if the wall is a problem border: state is unsolvable
-        if wall_y == 0 or wall_y >= len(self.board[0])-1:
-            return True
         # first check if there are achievable goals on the axis that the box can still move to:
         found_goal = None
         for goal in self.goal_cells:
@@ -468,7 +465,9 @@ class Sokoban:
                         break
                 if pathable:
                     return False
-
+        # if the wall is a problem border: state is unsolvable
+        if wall_y == 0 or wall_y >= len(self.board[0])-1:
+            return True
         # if there are no inbound openings on wall axis, state is unsolvable
         # no goals on this axis, but is there an opening that lets us escape?
         # if there is an opening there needs to b an adjacent spot to push
@@ -503,12 +502,18 @@ class Sokoban:
                     return False
         return True
 
+    def neighboring_boxes_unsovability(self,box):
+        return False
+
     def is_unsolvable(self,box):
         x,y = box
         # case 0: box pushed on goal
         if (self.cell_at((x,y)) == CellState.BOX_ON_GOAL):
             return False
 
+        # case0: another neighboring box has caused an unsolvable board
+        if self.neighboring_boxes_unsovability(box):
+            return True
         # case1: a box is in a corner that is not a goal
         # case2: a box against a wall but can still reach a goal
         # case3: a box is against a wall and can no longer reach a goal
