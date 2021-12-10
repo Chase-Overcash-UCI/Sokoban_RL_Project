@@ -390,15 +390,15 @@ class Sokoban:
             goal_x,goal_y = goal
             if goal_y == box_y:
                 #found a goal on this axis but can we get to it directly?
-                goal_path = []
+                offset = 0
                 if goal_x > box_x:
-                    goal_path = self.board[box_x+1:goal_x,box_y]
+                    offset = 1
                 elif goal_x < box_x:
-                    goal_path = np.flip(self.board[goal_x+1:box_x, box_y])
+                    offset = -1
                 pathable = True
                 # no walls in way means that box can directly be pathed there
-                for diff_x in range(0,len(goal_path)):
-                    if self.cell_at(diff_x, box_y) == CellState.WALL:
+                for diff_x in range(box_x + offset, goal_x):
+                    if self.cell_at((diff_x,box_y)) == CellState.WALL:
                         pathable = False
                         break
                 if pathable:
@@ -427,13 +427,13 @@ class Sokoban:
                 inbounds = True
             if inbounds and np.all(self.cell_at((x,wall_y)) != CellState.WALL) and np.all(self.cell_at((x,par_y)) != CellState.WALL) and np.all(self.cell_at((x,box_y)) != CellState.WALL):
                 # an opening? or is it, make sure that it is not out of bounds, make sure that box can get there
-                box_path = []
+                offset = 0
                 if x > box_x:
-                    box_path = self.board[box_x+1:x,box_y ]
+                    offset = 1
                 else:
-                    box_path = np.flip(self.board[x+1:box_x,box_y])
+                    offset = -1
                 pathable = True
-                for diff_x in range(0,len(box_path)):
+                for diff_x in range(box_x + offset, x):
                     if self.cell_at((diff_x,box_y)) == CellState.WALL:
                         pathable == False
                         break
@@ -451,14 +451,15 @@ class Sokoban:
             if goal_x == box_x:
                 #found a goal on this axis but can we get to it directly?
                 goal_path = []
+                offset = 0
                 if goal_y > box_y:
-                    goal_path = self.board[box_x,box_y+1:goal_y]
+                    offset = 1
                 elif goal_y < box_y:
-                    goal_path = np.flip(self.board[box_x,goal_y+1:box_y])
+                    offset = -1
                 # no walls in way means that box can directly be pathed there
                 pathable = True
-                for diff_y in range(0,len(goal_path)):
-                    if self.cell_at((box_x,diff_y)) == CellState.WALL:
+                for diff_y in range(box_y+offset, goal_y):
+                    if self.cell_at((box_x, diff_y)) == CellState.WALL:
                         pathable = False
                         break
                 if pathable:
@@ -486,21 +487,24 @@ class Sokoban:
                 inbounds = True
             elif inbounds and np.all(self.cell_at((wall_x,y)) != CellState.WALL) and np.all(self.cell_at((par_x,y)) != CellState.WALL) and np.all(self.cell_at((box_x,y)) != CellState.WALL):
                 # an opening? or is it, make sure that it is not out of bounds, make sure that box can get there
-                box_path = []
                 if y > box_y:
-                    box_path = self.board[box_x,box_y+1:y]
+                    offset = +1
                 else:
-                    box_path = np.flip(self.board[box_x,y+1:box_y])
-                walkable = True
-                for diff_y in range(0,len(box_path)):
+                    offset = -1
+                pathable = True
+                for diff_y in range(box_y + offset, y):
                     if self.cell_at((box_x,diff_y)) == CellState.WALL:
-                        walkable == False
+                        pathable == False
                         break
-                if walkable:
+                if pathable:
                     return False
         return True
 
     def neighboring_boxes_unsovability(self,box):
+        unsolvable_1 = [[CellState.WALL,CellState.BOX],[CellState.WALL,CellState.BOX]]
+        unsolvable_2 = [[CellState.BOX,CellState.BOX],[CellState.WALL,CellState.BOX]]
+        unsolvable_3 = [[CellState.WALL,CellState.WALL,CellState.EMPTY],[CellState.WALL,CellState.EMPTY,CellState.WALL],[CellState.EMPTY,CellState.BOX,CellState.WALL]]
+
         return False
 
     def is_unsolvable(self,box):
@@ -525,7 +529,6 @@ class Sokoban:
         up_state = self.cell_at(up_adjacent)
         down_adjacent= (x+1,y)
         down_state = self.cell_at(down_adjacent)
-
         #check if in a corner
         if (left_state == CellState.WALL and up_state == CellState.WALL ) or (left_state == CellState.WALL and down_state == CellState.WALL):
             #stuck in corner
@@ -537,18 +540,17 @@ class Sokoban:
             # now check for horizontal, vertical walls that create unsolveable states
 
             # horizontal wall check
-            if up_state == CellState.WALL:
+            if np.any(up_state == CellState.WALL):
                 return self.horizonal_wall_check(box, up_adjacent)
-            elif down_state == CellState.WALL:
+            elif np.any(down_state == CellState.WALL):
                 return self.horizonal_wall_check(box, down_adjacent)
             # vertical wall check
-            elif left_state == CellState.WALL:
+            elif np.any(left_state == CellState.WALL):
                 return self.vertical_wall_check(box,left_adjacent)
-            elif right_state == CellState.WALL:
+            elif np.any(right_state == CellState.WALL):
                 return self.vertical_wall_check(box,right_adjacent)
             else:
                 return False
-
     def is_solved(self):
         for box in self.box_cells:
             if box not in self.goal_cells:

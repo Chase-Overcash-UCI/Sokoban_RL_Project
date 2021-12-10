@@ -63,7 +63,7 @@ def solve(game: Sokoban):
 
 
 # input_file = "sample_inputs/sokoban01.txt"
-input_file = "sample_inputs/benchmarks/sokoban-01.txt"
+input_file = "sample_inputs/benchmarks/sokoban-02.txt"
 sokoban_game = SokobanPygame(input_file, False)
 sleep_factor = 1
 
