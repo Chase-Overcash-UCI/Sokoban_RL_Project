@@ -69,7 +69,7 @@ def solve(game: Sokoban):
 
 
 # input_file = "sample_inputs/sokoban01.txt"
-input_file = "sample_inputs/benchmarks/sokoban-02.txt"
+input_file = "sample_inputs/benchmarks/sokoban-04.txt"
 # input_file = "sample_inputs/sokoban03.txt"
 sokoban_game = SokobanPygame(input_file, False)
 # sokoban_game.play()

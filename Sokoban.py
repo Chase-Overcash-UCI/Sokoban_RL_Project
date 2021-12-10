@@ -422,10 +422,10 @@ class Sokoban:
             par_y = box_y-1
         # keeps track if opening is part of the actual map or not, if it is inboundes there has to be a wall before it at some point
         inbounds = False
-        for x in range(1, len(wall_axis)-1):
-            if self.cell_at((x,box_y)) == CellState.WALL and not inbounds:
+        for x in range(0, len(wall_axis)-1):
+            if  not inbounds and self.cell_at((x,box_y)) == CellState.WALL:
                 inbounds = True
-            if inbounds and np.all(self.cell_at((x,wall_y)) != CellState.WALL) and np.all(self.cell_at((x,par_y)) != CellState.WALL) and np.all(self.cell_at((x,box_y)) != CellState.WALL):
+            elif inbounds and np.all(self.cell_at((x,wall_y)) != CellState.WALL) and np.all(self.cell_at((x,par_y)) != CellState.WALL) and np.all(self.cell_at((x,box_y)) != CellState.WALL):
                 # an opening? or is it, make sure that it is not out of bounds, make sure that box can get there
                 offset = 0
                 if x > box_x:
@@ -487,6 +487,7 @@ class Sokoban:
                 inbounds = True
             elif inbounds and np.all(self.cell_at((wall_x,y)) != CellState.WALL) and np.all(self.cell_at((par_x,y)) != CellState.WALL) and np.all(self.cell_at((box_x,y)) != CellState.WALL):
                 # an opening? or is it, make sure that it is not out of bounds, make sure that box can get there
+                offset = 0
                 if y > box_y:
                     offset = +1
                 else:
@@ -501,9 +502,10 @@ class Sokoban:
         return True
 
     def neighboring_boxes_unsovability(self,box):
-        unsolvable_1 = [[CellState.WALL,CellState.BOX],[CellState.WALL,CellState.BOX]]
-        unsolvable_2 = [[CellState.BOX,CellState.BOX],[CellState.WALL,CellState.BOX]]
+        unsolvable_1 = [[CellState.EMPTY,CellState.EMPTY,CellState.EMPTY,CellState.EMPTY],[CellState.WALL,CellState.BOX,CellState.EMPTY],[CellState.WALL,CellState.BOX,CellState.EMPTY]]
+        unsolvable_2 = [[CellState.EMPTY,CellState.EMPTY,CellState.EMPTY,CellState.EMPTY],[CellState.BOX,CellState.BOX,CellState.EMPTY],[CellState.WALL,CellState.BOX,CellState.WALL]]
         unsolvable_3 = [[CellState.WALL,CellState.WALL,CellState.EMPTY],[CellState.WALL,CellState.EMPTY,CellState.WALL],[CellState.EMPTY,CellState.BOX,CellState.WALL]]
+       # unsolvable_4 =
 
         return False
 
