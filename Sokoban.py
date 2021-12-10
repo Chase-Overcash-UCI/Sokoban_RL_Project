@@ -398,7 +398,7 @@ class Sokoban:
                 pathable = True
                 # no walls in way means that box can directly be pathed there
                 for diff_x in range(0,len(goal_path)):
-                    if self.cell_at(diff_x, box_y) == CellState.WALL:
+                    if self.cell_at((diff_x, box_y)) == CellState.WALL:
                         pathable = False
                         break
                 if pathable:
