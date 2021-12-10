@@ -85,6 +85,28 @@ def print_board(board):
 
     print("=" * 40)
 
+
+# Construct board from text string
+# Example input
+#   01234567
+# 0 ########
+# 1 #  .# .#
+# 2 #    $ #
+# 3 # $@## #
+# 4 #  $  .#
+# 5 ########
+def board_from_terminal(board_str):
+    char_to_cellstate = {state.value: state for state in CellState}
+    board_rows = board_str.splitlines()[1:]                             # skip indexing line
+    board_rows = [row for row in board_rows if row]                     # skip empty line
+    board_rows = [row[row.index(" ") + 1:] for row in board_rows]       # skip number and whitespace before board
+    n_rows, n_cols = len(board_rows), len(board_rows[0])
+    board = np.empty((n_rows, n_cols), dtype=CellState)
+    for r in range(n_rows):
+        for c in range(n_cols):
+            board[r, c] = char_to_cellstate[board_rows[r][c]]
+
+
 def soln_to_str(soln):
     string = ''
     for a in soln:
