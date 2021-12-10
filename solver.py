@@ -39,13 +39,19 @@ def solve(game: Sokoban):
                 game.set_box_and_player_pos(current_box_state, path[-1])
                 game.move(action)
                 _, just_pushed = game.get_pushed_box()
-                print_board(game.board)
-                print(just_pushed)
-                if game.is_unsolvable(just_pushed):
+                if debug:
+                    print_board(game.board)
+                    print(just_pushed)
+                # if game.is_unsolvable(just_pushed):
+                if game.deadlock_map[just_pushed]:
                     print("Unsolvable")
                     continue
-                sokoban_game.render()
-                # time.sleep(0.001)
+                if game.is_frozen_box_unsolvable(just_pushed):
+                    print("Frozen boxes not on goal detected => Unsolvable")
+                    continue
+                if debug:
+                    sokoban_game.render()
+                    time.sleep(0.001)
 
                 # condition check
                 completed, failed = game.is_completed()
@@ -69,15 +75,15 @@ def solve(game: Sokoban):
 
 
 # input_file = "sample_inputs/sokoban01.txt"
-input_file = "sample_inputs/benchmarks/sokoban-04.txt"
+input_file = "sample_inputs/benchmarks/sokoban01.txt"
 # input_file = "sample_inputs/sokoban03.txt"
-sokoban_game = SokobanPygame(input_file, False)
+sokoban_game = SokobanPygame(input_file, False, draw_deadlock=True)
 # sokoban_game.play()
 sleep_factor = 1
+debug = True
 
 exec_times = solve(sokoban_game.game)
 total_time = sum(exec_times)
 avg_exec_time = total_time / len(exec_times)
 print(f"Total time: {total_time}s. Each loop takes: {avg_exec_time}")
-print(avg_exec_time)
-time.sleep(10)
+time.sleep(3)

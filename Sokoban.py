@@ -24,9 +24,9 @@ class Sokoban:
         self.boxes_in_corner = []
         self.num_actions = len(Action)
         self.debug = debug
-        self.visit_count = 0
         self.did_push_box = False
-        self.box_pushed = None
+        self.pushed_box = None
+        self.deadlock_map = self.__init_deadlock_map()
 
     # If move is not legal we can just skip the whole method
     def move(self, action):
@@ -173,6 +173,16 @@ class Sokoban:
     # set cell to CellState
     def set_cell_at(self, pos, state):
         self.board[pos[0], pos[1]] = state
+
+    # Check if cell at pos is a goal cell
+    def is_goal_cell(self, pos):
+        cell = self.cell_at(pos)
+        return cell is CellState.GOAL or cell is CellState.BOX_ON_GOAL or cell is CellState.PLAYER_ON_GOAL
+
+    # Check if cell at pos is a box cell
+    def is_box_cell(self, pos):
+        cell = self.cell_at(pos)
+        return cell is CellState.BOX_ON_GOAL or cell is CellState.BOX
 
     def get_num_box_on_goal(self):
         num_box_on_goal = 0
@@ -328,6 +338,134 @@ class Sokoban:
             action_sequences.append(pos_dif_to_action[get_pos_dif(next_pos, current_pos)])
         return action_sequences
 
+    # Create checkpoints for board state, contains a tuple of tuples (so it could be hashable?)
+    # Checkpoint has the following format: (box_pos_1, box_pos_2, ..., box_pos_n, player_pos), box is sort by sorted
+    def create_board_checkpoint(self):
+        checkpoint = (*sorted(self.box_cells), self.player_pos)
+        return checkpoint
+
+    # Restore checkpoint
+    def restore_checkpoint(self, checkpoint):
+        box_checkpoint = checkpoint[:-1]
+        player_checkpoint = checkpoint[-1]
+        self.set_box_and_player_pos(box_checkpoint, player_checkpoint)
+
+    # Creates a map of boolean values whether any cell is in a deadlock state
+    # (if box is pushed into the cell, it cannot go from there to goal)
+    # Currently it will all box position that results in an unsolvable state
+    # This is initialized by pulling a box from each goal to every square on map, if any cell that is unreachable
+    # by pulling for all goal, then pushing to that cell will result in deadlock
+    def __init_deadlock_map(self):
+        deadlock_map = np.full((self.n_row, self.n_col), False, dtype=bool)
+
+        # DFS to explore boxes to check which cells are deadlock
+        for goal_cell in self.goal_cells:
+            deadlock_map[goal_cell] = True
+            queue = set()
+            visited = np.full((self.n_row, self.n_col), False, dtype=bool)
+            queue.add(goal_cell)
+            # While queue is not empty
+            while queue:
+                # Check if current cell is already visited, if not we mark as visited
+                current_box_pos = queue.pop()
+                if visited[current_box_pos]:
+                    continue
+                visited[current_box_pos] = True
+                # Add each cell pulled by this box to exploration queue
+                pullable_actions = self.__pullable_actions(current_box_pos)
+                for action in pullable_actions:
+                    queue.add(get_new_pos(current_box_pos, action))
+            deadlock_map = np.logical_or(deadlock_map, visited)
+
+        deadlock_map = np.logical_not(deadlock_map)
+        return deadlock_map
+
+    # Get all pullable direction for box
+    def __pullable_actions(self, box):
+        directions = []
+        for action in Action:
+            current_player_pos = get_new_pos(box, action)
+            next_player_pos = get_new_pos(current_player_pos, action)
+            if self.cell_at(current_player_pos) is CellState.WALL or self.cell_at(next_player_pos) is CellState.WALL:
+                continue
+            directions.append(action)
+        return directions
+
+    # Check if this box is frozen (not pushable)
+    # Box is block if one of the three conditions follows are true:
+    # 1) If either cell in opposite directions is a wall cell
+    # 2) If both cell in opposite direction is a deadlock cell
+    # 3) If adjacent cell is a box, we need to check if it's blocked
+    def is_frozen_box_unsolvable(self, box, frozen_box_list=None):
+        if frozen_box_list is None:
+            frozen_box_list = []
+
+        visited_cells = []
+        horizontal_blocked = self.__horizontal_axis_blocked(box, frozen_box_list, visited_cells)
+        visited_cells = []
+        vertical_blocked = self.__vertical_axis_blocked(box, frozen_box_list, visited_cells)
+        # if both axis is blocked, the game is unsolvable when the chain frozen box has any box not on the goal list
+        if horizontal_blocked and vertical_blocked:
+            for frozen_box in frozen_box_list:
+                if not self.is_goal_cell(frozen_box):
+                    return True
+        return False
+
+    # check if box is blocked horizontally
+    def __horizontal_axis_blocked(self, box, frozen_box_list, visited_cells):
+        # circular check
+        if box in visited_cells:
+            frozen_box_list.append(box)
+            return True
+        visited_cells.append(box)
+
+        left_box = get_new_pos(box, Action.LEFT)
+        right_box = get_new_pos(box, Action.RIGHT)
+        # condition 1 and 2
+        if (self.cell_at(left_box) is CellState.WALL or self.cell_at(right_box) is CellState.WALL) \
+                or (self.deadlock_map[left_box] and self.deadlock_map[right_box]):
+            frozen_box_list.append(box)
+            return True
+        # condition 3
+        if self.is_box_cell(left_box):
+            blocked = self.__vertical_axis_blocked(left_box, frozen_box_list, visited_cells)
+            if blocked:
+                frozen_box_list.append(box)
+                return True
+        if self.is_box_cell(right_box):
+            blocked = self.__vertical_axis_blocked(right_box, frozen_box_list, visited_cells)
+            if blocked:
+                frozen_box_list.append(box)
+                return True
+        return False
+
+    # check if box is blocked vertically
+    def __vertical_axis_blocked(self, box, frozen_box_list, visited_cells):
+        if box in visited_cells:
+            frozen_box_list.append(box)
+            return True
+        visited_cells.append(box)
+
+        top_box = get_new_pos(box, Action.UP)
+        bottom_box = get_new_pos(box, Action.DOWN)
+        # condition 1 and 2
+        if (self.cell_at(top_box) is CellState.WALL or self.cell_at(bottom_box) is CellState.WALL) \
+                or (self.deadlock_map[top_box] and self.deadlock_map[bottom_box]):
+            frozen_box_list.append(box)
+            return True
+        # condition 3
+        if self.is_box_cell(top_box):
+            blocked = self.__horizontal_axis_blocked(top_box, frozen_box_list, visited_cells)
+            if blocked:
+                frozen_box_list.append(box)
+                return True
+        if self.is_box_cell(bottom_box):
+            blocked = self.__horizontal_axis_blocked(bottom_box, frozen_box_list, visited_cells)
+            if blocked:
+                frozen_box_list.append(box)
+                return True
+        return False
+
     # Functions added by Huilai
     # Please let me know if I wrongly use any attribute
 
@@ -371,9 +509,6 @@ class Sokoban:
                     self.box_cells.append((r, c))
                 if self.board[r, c] == CellState.PLAYER or self.board[r, c] == CellState.PLAYER_ON_GOAL:
                     self.player_pos = (r, c)
-
-    def iterate_visit_count(self):
-        self.visit_count += 1
 
     # checks if a box was pushed, returns a tuple of boolean, position tuple
     def get_pushed_box(self):
@@ -495,7 +630,7 @@ class Sokoban:
                 pathable = True
                 for diff_y in range(box_y + offset, y):
                     if self.cell_at((box_x,diff_y)) == CellState.WALL:
-                        pathable == False
+                        pathable = False
                         break
                 if pathable:
                     return False

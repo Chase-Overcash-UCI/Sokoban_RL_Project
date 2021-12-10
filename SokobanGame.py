@@ -7,8 +7,8 @@ from abc import abstractmethod
 class SokobanGame:
     def __init__(self, input_file, debug=True):
         self.game = Sokoban(input_file, debug=debug)
-        self.input_file = input_file
         self.debug = debug
+        self.input_file = input_file
 
     def reset_game(self):
         self.game = Sokoban(self.input_file)
@@ -56,12 +56,13 @@ class SokobanGame:
 
 
 class SokobanPygame(SokobanGame):
-    def __init__(self, input_file, debug=True, grid_size=50):
+    def __init__(self, input_file, debug=True, grid_size=50, draw_deadlock=False):
         super().__init__(input_file, debug=debug)
         self.grid_size = grid_size
         self.__init_config()
         self.__init_pygame_engine()
         self.last_tick = pygame.time.get_ticks()
+        self.draw_deadlock = draw_deadlock
 
     def __init_config(self):
         self.COLOR_MAP = {
@@ -116,6 +117,16 @@ class SokobanPygame(SokobanGame):
             pygame.draw.line(self.screen, black, (c * self.grid_size, 0),
                              (c * self.grid_size, self.window_height), grid_width)
 
+    # Draw deadlock cell
+    def __draw_deadlock(self):
+        for r in range(self.game.n_row):
+            for c in range(self.game.n_col):
+                if self.game.deadlock_map[r, c]:
+                    x = c * self.grid_size
+                    y = r * self.grid_size
+                    pygame.draw.line(self.screen, (255, 0, 0), [x, y], [x + self.grid_size, y + self.grid_size])
+                    pygame.draw.line(self.screen, (255, 0, 0), [x + self.grid_size, y], [x, y + self.grid_size])
+
     # get input from keyboard
     @staticmethod
     def get_input():
@@ -148,6 +159,8 @@ class SokobanPygame(SokobanGame):
     def render(self):
         self.__draw_board()
         self.__draw_grid()
+        if self.draw_deadlock:
+            self.__draw_deadlock()
         pygame.display.flip()
 
 
