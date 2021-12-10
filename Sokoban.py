@@ -435,7 +435,7 @@ class Sokoban:
                 pathable = True
                 for diff_x in range(box_x + offset, x):
                     if self.cell_at((diff_x,box_y)) == CellState.WALL:
-                        pathable == False
+                        pathable = False
                         break
                 if pathable:
                     return False
