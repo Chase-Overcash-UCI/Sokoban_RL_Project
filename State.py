@@ -85,5 +85,8 @@ class State:
                     return curr.getPath()
                 for move in curr.sokoban.get_current_valid_moves():
                     child = State(curr.sokoban,curr,move)
+                    pushed_bool, box_pos = child.sokoban.get_pushed_box()
+                    if pushed_bool and curr.sokoban.is_unsolvable(box_pos):
+                        continue
                     if not self.hasVisited(visited,child.sokoban.board):
                         frontier.append(child)

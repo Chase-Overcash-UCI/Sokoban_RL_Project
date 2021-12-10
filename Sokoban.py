@@ -381,14 +381,14 @@ class Sokoban:
         return self.did_push_box, self.pushed_box
 
     #returns true if a vertical wall adjacent to a box causes an unsolvable state, return false otherwise
-    def vertical_wall_check(self, box_pos, wall_pos,direction):
+    def vertical_wall_check(self, box_pos, wall_pos):
         box_x, box_y = box_pos
         wall_x, wall_y = wall_pos
 
         # next check if there are achievable goals on the axis that the box can still move to:
         for goal in self.goal_cells:
             goal_x,goal_y = goal
-            if goal_x == box_x:
+            if goal_y == box_y:
                 #found a goal on this axis but can we get to it directly?
                 goal_path = []
                 if goal_x > box_x:
@@ -405,7 +405,7 @@ class Sokoban:
                     return False
 
         # if there are no inbound openings on wall axis, state is unsolvable
-        if wall_x == 0 or wall_x == len(self.board) - 1:
+        if wall_y == 0 or wall_y == len(self.board) - 1:
             return True
 
         # no goals on this axis, but is there an opening that lets us escape?
@@ -414,18 +414,18 @@ class Sokoban:
         box_axis =  self.board[:,box_y]
         parallel_axis = []
         par_y = None
-        if direction == 'LEFT':
+        if wall_y < box_y:
             parallel_axis = self.board[:,box_y+1]
             par_y = box_y+1
-        elif direction == 'RIGHT':
+        elif wall_y > box_y:
             parallel_axis = self.board[:,box_y-1]
             par_y = box_y-1
         # keeps track if opening is part of the actual map or not, if it is inboundes there has to be a wall before it at some point
         inbounds = False
-        for x in range(0, len(wall_axis)):
+        for x in range(1, len(wall_axis)-1):
             if self.cell_at((x,box_y)) == CellState.WALL and not inbounds:
                 inbounds = True
-            if inbounds and self.cell_at((x,wall_y)) == CellState.EMPTY and self.cell_at((x,par_y)) == CellState.EMPTY:
+            if inbounds and np.all(self.cell_at((x,wall_y)) != CellState.WALL) and np.all(self.cell_at((x,par_y)) != CellState.WALL) and np.all(self.cell_at((x,box_y)) != CellState.WALL):
                 # an opening? or is it, make sure that it is not out of bounds, make sure that box can get there
                 box_path = []
                 if x > box_x:
@@ -442,13 +442,13 @@ class Sokoban:
         return True
 
     #returns true if a horizontal wall adjacent to a box causes an unsolvable state, return false otherwise
-    def horizonal_wall_check(self, box_pos, wall_pos, direction):
+    def horizonal_wall_check(self, box_pos, wall_pos):
         box_x, box_y = box_pos
         wall_x, wall_y = wall_pos
         # first check if there are achievable goals on the axis that the box can still move to:
         for goal in self.goal_cells:
             goal_x,goal_y = goal
-            if goal_y == box_y:
+            if goal_x == box_x:
                 #found a goal on this axis but can we get to it directly?
                 goal_path = []
                 if goal_y > box_y:
@@ -458,7 +458,7 @@ class Sokoban:
                 # no walls in way means that box can directly be pathed there
                 pathable = True
                 for diff_y in range(0,len(goal_path)):
-                    if self.cell_at(box_x,diff_y) == CellState.WALL:
+                    if self.cell_at((box_x,diff_y)) == CellState.WALL:
                         pathable = False
                         break
                 if pathable:
@@ -473,18 +473,18 @@ class Sokoban:
         box_axis =  self.board[box_x,:]
         parallel_axis = []
         par_x = None
-        if direction == 'UP':
+        if wall_x < box_x:
             parallel_axis = self.board[box_x+1,:]
             par_x = box_x+1
-        elif direction == 'DOWN':
+        elif wall_x > box_x:
             parallel_axis = self.board[box_x-1,:]
             par_x = box_x-1
         # keeps track if opening is part of the actual map or not, if it is inboundes there has to be a wall before it at some point
         inbounds = False
-        for y in range(0,len(wall_axis)):
-            if self.cell_at((box_x,y)) == CellState.WALL and not inbounds:
+        for y in range(0,len(wall_axis)-1):
+            if not inbounds and self.cell_at((box_x,y)) == CellState.WALL:
                 inbounds = True
-            if inbounds and np.all(self.cell_at((wall_x,y)) == CellState.EMPTY) and np.all(self.cell_at((par_x,y)) == CellState.EMPTY):
+            elif inbounds and np.all(self.cell_at((wall_x,y)) != CellState.WALL) and np.all(self.cell_at((par_x,y)) != CellState.WALL) and np.all(self.cell_at((box_x,y)) != CellState.WALL):
                 # an opening? or is it, make sure that it is not out of bounds, make sure that box can get there
                 box_path = []
                 if y > box_y:
@@ -538,14 +538,14 @@ class Sokoban:
 
             # horizontal wall check
             if up_state == CellState.WALL:
-                return self.horizonal_wall_check(box, up_adjacent, 'UP')
+                return self.horizonal_wall_check(box, up_adjacent)
             elif down_state == CellState.WALL:
-                return self.horizonal_wall_check(box, down_adjacent, 'DOWN')
+                return self.horizonal_wall_check(box, down_adjacent)
             # vertical wall check
             elif left_state == CellState.WALL:
-                return self.vertical_wall_check(box,left_adjacent,'LEFT')
+                return self.vertical_wall_check(box,left_adjacent)
             elif right_state == CellState.WALL:
-                return self.vertical_wall_check(box,right_adjacent, 'RIGHT')
+                return self.vertical_wall_check(box,right_adjacent)
             else:
                 return False
 

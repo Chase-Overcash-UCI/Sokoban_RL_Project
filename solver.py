@@ -41,12 +41,17 @@ def solve(game: Sokoban):
 
                 # condition check
                 completed, failed = game.is_completed()
+                pushed_bool, box_pos = game.get_pushed_box()
+                print(str(pushed_bool))
                 if completed and not failed:
                     print("Found")
                     return
-                elif completed and failed:
-                    print("Boxes in corner")
+                elif pushed_bool and game.is_unsolvable(box_pos):
+                    print('unsolvable')
                     continue
+                #elif completed and failed:
+                #   print("Boxes in corner")
+                #   continue
 
                 next_state = (*sorted(game.box_cells), game.player_pos)
                 if next_state not in visited_states:
