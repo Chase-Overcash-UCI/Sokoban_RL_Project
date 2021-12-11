@@ -75,10 +75,11 @@ def solve(game: Sokoban):
 
 
 # input_file = "sample_inputs/sokoban01.txt"
-input_file = "sample_inputs/benchmarks/sokoban01.txt"
+input_file = "sample_inputs/benchmarks/sokoban90.txt"
 # input_file = "sample_inputs/sokoban03.txt"
 sokoban_game = SokobanPygame(input_file, False, draw_deadlock=True)
 # sokoban_game.play()
+# exit()
 sleep_factor = 1
 debug = True
 
